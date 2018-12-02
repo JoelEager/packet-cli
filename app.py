@@ -5,6 +5,7 @@ Entry point for the packet CLI
 from os import environ
 from sys import exit
 from urllib import parse
+from itertools import filterfalse
 import click
 import requests
 
@@ -93,13 +94,46 @@ def freshman(username):
         packet([str(freshman["packets"][0]["id"])])
 
 
+def is_currently_on_packet(freshman):
+    """
+    Helper method for the search command
+        Handles the filtering of results
+    """
+    for _ in filter(lambda packet: packet["open"], freshman["packets"]):
+        return True
+
+    return False
+
+
+def print_results(results):
+    """
+    Helper method for the search command
+        Prints a results list
+    """
+    for freshman in results:
+        print("\t{} ({})".format(freshman["name"], freshman["rit_username"]))
+
+
 @cli.command()
 @click.argument("term")
 def search(term):
     """
     Searches for freshmen based on their names
     """
-    print(term)
+    results = make_request(requests.get, parse.urljoin("/api/freshmen/", term))
+    on_packet = list(filter(is_currently_on_packet, results))
+    off_packet = list(filterfalse(is_currently_on_packet, results))
+
+    if len(on_packet) != 0:
+        print("Freshmen currently on packet:")
+        print_results(on_packet)
+
+        if len(off_packet) != 0:
+            print()
+
+    if len(off_packet) != 0:
+        print("Freshmen not currently on packet:")
+        print_results(off_packet)
 
 
 @cli.command()
