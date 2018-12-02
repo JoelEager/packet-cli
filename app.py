@@ -42,6 +42,7 @@ def make_request(method, path):
             print(resp.json()["description"])
         except (ValueError, KeyError):
             pass
+        exit(1)
     else:
         # Everything looks good, return the parsed JSON
         return resp.json()
@@ -55,12 +56,12 @@ def packet(id):
     """
     packet = make_request(requests.get, parse.urljoin("/api/packet/", id))
 
-    print(packet["freshman_name"] + "'s packet:")
+    print("{}'s packet (#{}):".format(packet["freshman_name"], packet["id"]))
 
     if packet["open"]:
         print("\tOpen until " + packet["end"])
     else:
-        print("\tOpen from " + packet["start"] + " to " + packet["end"])
+        print("\tOpen from {} to {}".format(packet["start"], packet["end"]))
 
     print()
     received = packet["signatures_received"]
@@ -80,7 +81,16 @@ def freshman(username):
     """
     Fetches a freshman based on username
     """
-    print(username)
+    freshman = make_request(requests.get, parse.urljoin("/api/freshman/", username))
+
+    print(freshman["name"] + ":")
+    print("\tOn-floor" if freshman["onfloor"] else "\tOff-floor")
+
+    if len(freshman["packets"]) != 0:
+        print("\tPacket attempts: " + ", ".join(map(lambda packet: "#" + str(packet["id"]), freshman["packets"])))
+
+        print()
+        packet([str(freshman["packets"][0]["id"])])
 
 
 @cli.command()
