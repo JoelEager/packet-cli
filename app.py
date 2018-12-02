@@ -137,12 +137,19 @@ def search(term):
 
 
 @cli.command()
-@click.argument("sign")
+@click.argument("username")
 def sign(username):
     """
     Signs the current packet of the freshmen with the given username
     """
-    print(username)
+    freshman = make_request(requests.get, parse.urljoin("/api/freshman/", username))
+
+    for packet in filter(lambda packet: packet["open"], freshman["packets"]):
+        make_request(requests.post, "/api/packet/" + str(packet["id"]) + "/sign")
+        print("Successfully signed {}'s packet #{}.".format(freshman["name"], packet["id"]))
+        return
+
+    print(freshman["name"] + " doesn't have a currently open packet.")
 
 
 if __name__ == '__main__':
