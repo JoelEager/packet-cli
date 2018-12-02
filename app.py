@@ -16,8 +16,7 @@ packet_server = environ.get("PACKET_SERVER", "packet.csh.rit.edu")
 @click.group()
 def cli():
     """
-    Top-level group of packet commands
-        Handles setup work for the CLI
+    CLI client for CSH packet
     """
     if cookie_token is None:
         print("ERROR: Please set the PACKET_TOKEN environment variable to your packet session cookie.")
@@ -118,7 +117,7 @@ def print_results(results):
 @click.argument("term")
 def search(term):
     """
-    Searches for freshmen based on their names
+    Searches for freshmen based on their names. (Not case sensitive)
     """
     results = make_request(requests.get, parse.urljoin("/api/freshmen/", term))
     on_packet = list(filter(is_currently_on_packet, results))
